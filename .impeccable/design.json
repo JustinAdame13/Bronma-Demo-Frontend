@@ -1,0 +1,37 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-22T03:33:02Z",
+  "title": "Design System: BRONMA — Mapa de clientes",
+  "extensions": {
+    "scope": {
+      "root": ".map-page-shell",
+      "source": "src/pages/collection-map.css",
+      "appliesTo": "Solo Mapa de clientes y su navegación local; otras pantallas conservan su sistema incumbente."
+    },
+    "shadows": [
+      { "name": "filter-selected", "value": "0 1px 2px #29331a15", "purpose": "Filtro de estado activo." },
+      { "name": "map-control", "value": "0 2px 8px #34422918", "purpose": "Ubicación, recentrar, leyenda y zoom." },
+      { "name": "tooltip", "value": "0 3px 10px #27351a26", "purpose": "Tooltip de mapa." },
+      { "name": "pin", "value": "-2px 3px 5px #29352240", "purpose": "Pin sobre la cartografía." },
+      { "name": "detail-overlay", "value": "-8px 0 24px #26351c18", "purpose": "Expediente superpuesto hasta 1500px, fuera de la variante tablet." },
+      { "name": "detail-mobile", "value": "0 -8px 24px #26351c20", "purpose": "Expediente móvil sobre el mapa." }
+    ],
+    "motion": [
+      { "name": "pin-transition", "value": "scale 180ms cubic-bezier(.2,.8,.2,1), background 180ms", "purpose": "Énfasis de selección del pin." },
+      { "name": "pin-active-scale", "value": "1.18", "purpose": "Escala del pin activo." },
+      { "name": "reduced-motion", "value": "@media (prefers-reduced-motion: reduce)", "purpose": "Elimina la transición del pin." }
+    ],
+    "breakpoints": [
+      { "name": "compact-desktop", "value": "(max-width: 1500px)" },
+      { "name": "tablet", "value": "(max-width: 1100px) and (min-width: 641px)" },
+      { "name": "mobile", "value": "(max-width: 640px)" }
+    ],
+    "focus": [
+      { "name": "keyboard", "value": "outline: 2px solid var(--gold); outline-offset: 3px", "purpose": "Botones, enlaces, inputs y selects dentro del mapa." },
+      { "name": "field-group", "value": "border-color: {colors.gold}; outline: 2px solid {colors.focus-soft}; outline-offset: 1px", "purpose": "Contenedor de búsqueda y ruta con focus-within." }
+    ],
+    "preferences": [
+      { "name": "more-contrast", "value": "(prefers-contrast: more)", "purpose": "Refuerza --muted, --border y el contorno de fila seleccionada en el CSS local." }
+    ]
+  }
+}

@@ -1,0 +1,119 @@
+/* Shared BRONMA workspace: stable navigation and visual tokens across routes. */
+
+.workspace-shell {
+  --text: #252824;
+  --muted: #656a63;
+  --border: #e1e2db;
+  --input-border: #c9ccc3;
+  --gold: #927239;
+  --selected-green: #927239;
+  --overdue: #a04438;
+  --soon: #826124;
+  --current: #3f725b;
+  display: grid;
+  grid-template-columns: 208px minmax(0, 1fr);
+  grid-template-rows: 68px 1fr;
+  background: #f5f5f0;
+  color: var(--text);
+}
+.workspace-shell ::selection { background: #e9d7ad; color: #252824; }
+.workspace-shell :is(input, textarea) { caret-color: var(--gold); }
+.workspace-shell :is(button, a, input, select):focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; }
+.workspace-shell .bronma-header {
+  grid-column: 1 / -1;
+  height: 68px;
+  padding: 0 28px 0 25px;
+  background: #252622;
+  border-bottom: 1px solid #3b3e37;
+  color: #f4f3eb;
+}
+.workspace-shell .bronma-brand { width: 150px; }
+.workspace-shell .bronma-brand img { width: 150px; height: 39px; object-fit: contain; }
+.workspace-shell .bronma-brand > span { color: #c5c8bb; font-size: 6px; letter-spacing: .18em; }
+.workspace-shell .operator-label strong { font-size: 12px; }
+.workspace-shell .operator-label > span { color: #b9bfb2; font-size: 11px; }
+.workspace-shell .header-divider { background: #4a4e43; }
+.workspace-shell .notification-button { color: #d4d8cd; }
+.workspace-shell .notification-button > span { border-color: #252622; background: #b16d56; }
+.workspace-shell .bronma-nav-row {
+  grid-column: 1;
+  grid-row: 2;
+  min-height: calc(100dvh - 68px);
+  height: auto;
+  padding: 26px 12px 20px;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 24px;
+  background: #252622;
+  border: 0;
+}
+.workspace-shell .bronma-nav { flex-direction: column; height: auto; gap: 6px; }
+.workspace-shell .bronma-nav > a {
+  padding: 0 13px;
+  min-height: 44px;
+  gap: 11px;
+  color: #bdc3b6;
+  font-size: 12px;
+  border-radius: 5px;
+}
+.workspace-shell .bronma-nav > a svg { width: 17px; height: 17px; stroke-width: 1.65; }
+.workspace-shell .bronma-nav > a:hover { background: #32332e; color: #fff; }
+.workspace-shell .bronma-nav > a.active { background: #423f33; color: #efdbad; }
+.workspace-shell .bronma-nav > a.active::after { display: none; }
+.workspace-shell .bromia-entry {
+  margin-top: auto;
+  padding: 14px 13px 0;
+  min-height: 54px;
+  border: 0;
+  border-top: 1px solid #45493d;
+  border-radius: 0;
+  color: #e2d3b1;
+  font-size: 12px;
+  gap: 11px;
+}
+.workspace-shell .bromia-entry:hover { background: #32332e; }
+.workspace-shell .bromia-entry-logo { width: 23px; height: 23px; }
+.workspace-shell main.bronma-main {
+  grid-column: 2;
+  grid-row: 2;
+  width: 100%;
+  max-width: none;
+  min-height: 0;
+  padding: 27px 28px 24px;
+  margin: 0;
+}
+.workspace-shell .offline-banner { grid-column: 2; grid-row: 2; align-self: start; z-index: 30; }
+.workspace-shell:has(.offline-banner) main.bronma-main { padding-top: 80px; }
+
+@media (max-width: 1500px) {
+  .workspace-shell { grid-template-columns: 190px minmax(0, 1fr); }
+  .workspace-shell .bronma-header { padding-left: 20px; }
+}
+@media (max-width: 1100px) and (min-width: 641px) {
+  .workspace-shell { grid-template-columns: 68px minmax(0, 1fr); }
+  .workspace-shell .bronma-nav-row { padding: 22px 9px; }
+  .workspace-shell .bronma-nav > a { justify-content: center; padding: 0; min-height: 46px; }
+  .workspace-shell .bronma-nav > a span, .workspace-shell .bromia-entry > span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+  .workspace-shell .bromia-entry { justify-content: center; padding-inline: 0; }
+  .workspace-shell main.bronma-main { padding: 24px 20px 20px; }
+}
+@media (max-width: 640px) {
+  .workspace-shell { display: flex; flex-direction: column; }
+  .workspace-shell .bronma-header { height: 62px; padding: 0 16px; }
+  .workspace-shell .bronma-brand { width: 120px; }
+  .workspace-shell .bronma-brand img { width: 120px; height: 33px; }
+  .workspace-shell .bronma-brand > span { font-size: 5px; }
+  .workspace-shell .bronma-header-actions { gap: 13px; }
+  .workspace-shell .operator-label strong { font-size: 10px; }
+  .workspace-shell .bronma-nav-row { flex-direction: row; min-height: 52px; height: 52px; padding: 0 12px; gap: 14px; overflow-x: auto; scrollbar-width: none; align-items: center; }
+  .workspace-shell .bronma-nav { flex-direction: row; flex: none; gap: 4px; height: 100%; }
+  .workspace-shell .bronma-nav > a { flex-direction: row; gap: 7px; padding: 0 11px; min-height: 36px; align-self: center; font-size: 12px; flex: none; }
+  .workspace-shell .bronma-nav > a svg { width: 16px; height: 16px; }
+  .workspace-shell .bromia-entry { flex-direction: row; padding: 0 11px; margin: 0; border: 0; min-height: 36px; font-size: 12px; }
+  .workspace-shell main.bronma-main { padding: 20px 12px 12px; min-height: 0; }
+  .workspace-shell .offline-banner { position: relative; }
+  .workspace-shell:has(.offline-banner) main.bronma-main { padding-top: 20px; }
+}
+@media (prefers-contrast: more) {
+  .workspace-shell { --muted: #454e3c; --border: #9aa58b; }
+}

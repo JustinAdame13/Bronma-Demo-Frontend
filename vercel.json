@@ -1,0 +1,29 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "functions": {
+    "api/softy.ts": {
+      "maxDuration": 300
+    },
+    "api/bromia.ts": {
+      "maxDuration": 300
+    }
+  },
+  "rewrites": [
+    {
+      "source": "/api/bromia/:path*",
+      "destination": "/api/bromia"
+    },
+    {
+      "source": "/api/softy/:path*",
+      "destination": "/api/softy"
+    },
+    {
+      "source": "/api/v1/:path*",
+      "destination": "/api/bromia"
+    },
+    {
+      "source": "/((?!api/).*)",
+      "destination": "/index.html"
+    }
+  ]
+}

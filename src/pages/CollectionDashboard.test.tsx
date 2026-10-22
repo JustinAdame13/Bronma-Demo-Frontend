@@ -30,7 +30,7 @@ it('muestra el dashboard con la respuesta real del backend', async () => {
   render(<QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}><MemoryRouter><CollectionDashboard /></MemoryRouter></QueryClientProvider>)
   expect(await screen.findByText('Cartera total')).toBeTruthy()
   expect(screen.getByText('$4,650.00')).toBeTruthy()
-  expect(screen.getByText('69.90% · 2 con atraso')).toBeTruthy()
+  expect(screen.getByText('70% · 2 con atraso')).toBeTruthy()
   expect(screen.getByText('Sin pagos')).toBeTruthy()
   expect(screen.getByText('31 a 60 días')).toBeTruthy()
   expect(screen.queryByText('Al corriente')).toBeNull() // la grafica es solo de lo vencido

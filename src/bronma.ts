@@ -16,10 +16,12 @@ export type Evaluation = { score: number; nivel: Risk; accionRecomendada: string
 export type ClientDetail = MapClient & { codigoOrigen: string; contacto: string; direccion: string; telefonoWhatsapp: string | null; aceptaWhatsapp: boolean; limiteCreditoEfectivo: string; plazoDiasEfectivo: number; notasAbiertas: Note[]; riesgo: Evaluation | null
   /** Pagos de más o anticipos sin aplicar; el backend los usa solos en la siguiente nota. */
   saldoAFavor?: string }
-export type Reminder = { id: number; clienteId: number; clienteNombre: string; folio: string; programadoPara: string; estado: 'PENDIENTE' | 'ENVIADO' | 'FALLIDO' | 'CANCELADO'; mensaje: string; error: string | null }
+export type Reminder = { id: number; clienteId: number; clienteNombre: string; folio: string; programadoPara: string; estado: 'PENDIENTE' | 'ENVIADO' | 'FALLIDO' | 'CANCELADO'; mensaje: string | null; error: string | null }
 export type Page<T> = { contenido: T[]; pagina: number; tamano: number; totalElementos: number; totalPaginas: number }
 export type AgingRange = 'AL_CORRIENTE' | 'VENCIDO_1_30' | 'VENCIDO_31_60' | 'VENCIDO_MAS_60'
 /** GET /dashboard de Spring Boot: la cartera es foto de hoy; la cobranza, del periodo [desde, hasta]. Montos como string decimal. */
+/** Resultado de POST /recordatorios/ejecutar. */
+export type ReminderRun = { fecha: string; enviador: string; generados: number; enviados: number; fallidos: number; cancelados: number; aviso: string | null }
 export type DashboardDto = {
   fecha: string; desde: string; hasta: string
   cartera: { total: string; vencida: string; alCorriente: string; porcentajeVencido: string; clientesConSaldo: number; clientesConVencido: number; saldoAFavor: string }

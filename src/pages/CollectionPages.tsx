@@ -1,9 +1,9 @@
 import { useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { Link } from 'react-router'
-import { Bell, Check, ChevronLeft, ChevronRight, Upload } from 'lucide-react'
+import { Bell, Check, ChevronLeft, ChevronRight, Send, Upload } from 'lucide-react'
 import { bronmaApi, cents, currency, demoMode } from '../bronma'
-import type { Configuration, DashboardDto, ImportResult, Page, Reminder } from '../bronma'
+import type { Configuration, DashboardDto, ImportResult, Page, Reminder, ReminderRun } from '../bronma'
 import { ErrorState, Loading, Notice, PageTitle, useOnline } from '../ui'
 
 const agingNames: Record<DashboardDto['antiguedad'][number]['rango'], string> = {
@@ -23,9 +23,9 @@ export function CollectionDashboard() {
     <div className="collection-metrics">
       {[
         ['Cartera total', currency(data.cartera.total), `${data.cartera.clientesConSaldo} ${data.cartera.clientesConSaldo === 1 ? 'cliente' : 'clientes'} con saldo`],
-        ['Vencido', currency(data.cartera.vencida), `${data.cartera.porcentajeVencido}% · ${data.cartera.clientesConVencido} con atraso`],
+        ['Vencido', currency(data.cartera.vencida), `${number(data.cartera.porcentajeVencido, 0)}% · ${data.cartera.clientesConVencido} con atraso`],
         ['Recuperado por recordatorios', currency(data.cobranza.recuperadoPorRecordatorios), `Del ${data.desde} al ${data.hasta}`],
-        ['Días promedio de cobro', data.cobranza.diasPromedioCobro ?? 'Sin pagos', `Venta a pago · ${data.cobranza.pagos} ${data.cobranza.pagos === 1 ? 'pago' : 'pagos'} en el periodo`],
+        ['Días promedio de cobro', data.cobranza.diasPromedioCobro === null ? 'Sin pagos' : number(data.cobranza.diasPromedioCobro, 1), `Venta a pago · ${data.cobranza.pagos} ${data.cobranza.pagos === 1 ? 'pago' : 'pagos'} en el periodo`],
       ].map(([title, value, caption]) => <article className="collection-metric" key={title}><span>{title}</span><strong>{value}</strong><small>{caption}</small></article>)}
     </div>
     {cents(data.cartera.saldoAFavor) > 0n && <Notice message={`Los clientes tienen ${currency(data.cartera.saldoAFavor)} a favor (pagos de más o anticipos). Se aplicará solo en sus siguientes notas.`} />}
@@ -42,12 +42,36 @@ export function CollectionDashboard() {
   </div>
 }
 
+// "66.00" -> "66", "16.90" -> "16.9": sin ceros de relleno
+function number(value: string, maxDecimals: number) {
+  const n = Number(value)
+  return Number.isFinite(n) ? n.toLocaleString('es-MX', { maximumFractionDigits: maxDecimals }) : value
+}
+
+function runSummary(r: ReminderRun) {
+  const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`
+  const parts = [plural(r.enviados, 'enviado', 'enviados'), plural(r.fallidos, 'con error', 'con error'), plural(r.generados, 'nuevo programado', 'nuevos programados'), plural(r.cancelados, 'cancelado', 'cancelados')]
+  return `Corrida del ${r.fecha}: ${parts.join(', ')}.${r.aviso ? ` ${r.aviso}` : ''}`
+}
+
 export function Reminders() {
   const [estado, setEstado] = useState('')
   const [pagina, setPagina] = useState(0)
   const [selected, setSelected] = useState<number | null>(null)
+  const [running, setRunning] = useState(false)
+  const [run, setRun] = useState<ReminderRun | null>(null)
+  const [runError, setRunError] = useState('')
+  const online = useOnline()
+  const cache = useQueryClient()
+  async function sendNow() {
+    if (demoMode || running || !online) return
+    setRunning(true); setRun(null); setRunError('')
+    try { setRun(await bronmaApi<ReminderRun>('/recordatorios/ejecutar', { method: 'POST' })); setPagina(0); await cache.invalidateQueries({ queryKey: ['bronma'] }) }
+    catch (e) { setRunError(e instanceof Error ? e.message : 'No pudimos ejecutar los recordatorios.') }
+    finally { setRunning(false) }
+  }
   const query = useQuery({ queryKey: ['bronma', 'recordatorios', estado, pagina], queryFn: () => bronmaApi<Page<Reminder>>(`/recordatorios?pagina=${pagina}${estado ? `&estado=${estado}` : ''}`) })
-  return <div className="collection-content"><PageTitle title="Recordatorios" description="Mensajes de cobranza por WhatsApp"><Link className="button outlined" to="/configuracion">Configuración de envíos</Link></PageTitle><section className="panel"><div className="collection-tabs">{[['', 'Todos'], ['PENDIENTE', 'Pendientes'], ['ENVIADO', 'Enviados'], ['FALLIDO', 'Con error'], ['CANCELADO', 'Cancelados']].map(([value, label]) => <button key={value} aria-pressed={estado === value} onClick={() => { setEstado(value); setPagina(0); setSelected(null) }}>{label}</button>)}</div>{query.isPending ? <Loading /> : query.isError ? <ErrorState error={query.error} retry={query.refetch} /> : <><div className="table-scroll" tabIndex={0} role="region" aria-label="Recordatorios de cobranza"><table><thead><tr><th>Cliente / nota</th><th>Fecha programada</th><th>Estado</th><th>Mensaje</th></tr></thead><tbody>{query.data.contenido.map(r => <tr key={r.id}><td><strong>{r.clienteNombre}</strong><small className="table-subtitle">{r.folio}</small></td><td>{r.programadoPara}</td><td><span className={`collection-status ${r.estado === 'FALLIDO' ? 'overdue' : r.estado === 'PENDIENTE' ? 'soon' : 'current'}`}>{{ PENDIENTE: 'Pendiente', ENVIADO: 'Enviado', FALLIDO: 'Con error', CANCELADO: 'Cancelado' }[r.estado]}</span></td><td><button className="text-link" onClick={() => setSelected(selected === r.id ? null : r.id)} aria-expanded={selected === r.id}>{selected === r.id ? 'Ocultar' : 'Ver mensaje'}<ChevronRight size={15} /></button>{selected === r.id && <div className="reminder-message"><p>{r.mensaje}</p>{r.error && <Notice error message={r.error} />}</div>}</td></tr>)}</tbody></table></div>{!query.data.contenido.length && <div className="map-empty"><Bell /><strong>No hay recordatorios en este estado.</strong></div>}<div className="collection-pagination"><span>{query.data.totalElementos} recordatorios</span><button className="icon-button" aria-label="Página anterior" disabled={pagina === 0} onClick={() => setPagina(p => p - 1)}><ChevronLeft size={18} /></button><span>Página {pagina + 1} de {Math.max(1, query.data.totalPaginas)}</span><button className="icon-button" aria-label="Página siguiente" disabled={pagina + 1 >= query.data.totalPaginas} onClick={() => setPagina(p => p + 1)}><ChevronRight size={18} /></button></div></>}</section>{demoMode && <p className="demo-footnote">Estados de ejemplo. Esta demo no envía mensajes.</p>}</div>
+  return <div className="collection-content"><PageTitle title="Recordatorios" description="Mensajes de cobranza por WhatsApp"><Link className="button outlined" to="/configuracion">Configuración de envíos</Link><button className="button primary" disabled={demoMode || running || !online} onClick={sendNow}><Send size={17} />{running ? 'Enviando…' : 'Enviar ahora'}</button></PageTitle>{run && <Notice error={run.fallidos > 0} message={runSummary(run)} />}{runError && <Notice error message={runError} />}<section className="panel"><div className="collection-tabs">{[['', 'Todos'], ['PENDIENTE', 'Pendientes'], ['ENVIADO', 'Enviados'], ['FALLIDO', 'Con error'], ['CANCELADO', 'Cancelados']].map(([value, label]) => <button key={value} aria-pressed={estado === value} onClick={() => { setEstado(value); setPagina(0); setSelected(null) }}>{label}</button>)}</div>{query.isPending ? <Loading /> : query.isError ? <ErrorState error={query.error} retry={query.refetch} /> : <><div className="table-scroll" tabIndex={0} role="region" aria-label="Recordatorios de cobranza"><table><thead><tr><th>Cliente / nota</th><th>Fecha programada</th><th>Estado</th><th>Mensaje</th></tr></thead><tbody>{query.data.contenido.map(r => <tr key={r.id}><td><strong>{r.clienteNombre}</strong><small className="table-subtitle">{r.folio}</small></td><td>{r.programadoPara}</td><td><span className={`collection-status ${r.estado === 'FALLIDO' ? 'overdue' : r.estado === 'PENDIENTE' ? 'soon' : 'current'}`}>{{ PENDIENTE: 'Pendiente', ENVIADO: 'Enviado', FALLIDO: 'Con error', CANCELADO: 'Cancelado' }[r.estado]}</span></td><td><button className="text-link" onClick={() => setSelected(selected === r.id ? null : r.id)} aria-expanded={selected === r.id}>{selected === r.id ? 'Ocultar' : 'Ver mensaje'}<ChevronRight size={15} /></button>{selected === r.id && <div className="reminder-message"><p>{r.mensaje || 'El texto se genera al enviarlo, con el saldo de ese día.'}</p>{r.error && <Notice error message={r.error} />}</div>}</td></tr>)}</tbody></table></div>{!query.data.contenido.length && <div className="map-empty"><Bell /><strong>No hay recordatorios en este estado.</strong></div>}<div className="collection-pagination"><span>{query.data.totalElementos} recordatorios</span><button className="icon-button" aria-label="Página anterior" disabled={pagina === 0} onClick={() => setPagina(p => p - 1)}><ChevronLeft size={18} /></button><span>Página {pagina + 1} de {Math.max(1, query.data.totalPaginas)}</span><button className="icon-button" aria-label="Página siguiente" disabled={pagina + 1 >= query.data.totalPaginas} onClick={() => setPagina(p => p + 1)}><ChevronRight size={18} /></button></div></>}</section>{demoMode && <p className="demo-footnote">Estados de ejemplo. Esta demo no envía mensajes.</p>}</div>
 }
 
 export function ImportPortfolio() {

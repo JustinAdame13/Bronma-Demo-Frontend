@@ -34,7 +34,11 @@ app.use('/api/v1', async (req, res) => {
     const result = await rawHostFor(req).request(req.url, req.method, ['GET', 'DELETE'].includes(req.method) ? undefined : req.body)
     if (result.status === 204) res.status(204).end(); else res.status(result.status).json(result.body)
   }
-  catch (error) { res.status(error && typeof error === 'object' && 'status' in error ? Number(error.status) : 502).json({ mensaje: error instanceof Error ? error.message : 'No pudimos conectar con la sucursal.' }) }
+  catch (error) {
+    // Se conservan los "campos" del ApiError de Spring Boot: el formulario marca el campo exacto
+    const campos = error && typeof error === 'object' && 'campos' in error && error.campos && typeof error.campos === 'object' ? error.campos : {}
+    res.status(error && typeof error === 'object' && 'status' in error ? Number(error.status) : 502).json({ mensaje: error instanceof Error ? error.message : 'No pudimos conectar con la sucursal.', campos })
+  }
 })
 app.use('/api', (_req, res) => { res.status(404).json({ error: 'Ruta no disponible.' }) })
 if (existsSync(resolve('dist/index.html'))) { app.use(express.static(resolve('dist'))); app.get('*', (_req, res) => res.sendFile(resolve('dist/index.html'))) }

@@ -7,7 +7,7 @@ import { adaptRequest, adaptResponse } from '../src/adapters.js'
 import type { ResumenAgrupado } from '../src/backend-types.js'
 
 export class HostError extends Error {
-  constructor(message: string, public status = 400, public uncertain = false) { super(message) }
+  constructor(message: string, public status = 400, public uncertain = false, public campos: Record<string, string> = {}) { super(message) }
 }
 export type Host = ReturnType<typeof createHost>
 /** adapt=true traduce entre el contrato de las páginas y Spring Boot (ver src/adapters.ts). */
@@ -22,7 +22,8 @@ export function createHost(base: string, headers: Record<string, string> = {}, a
       } catch { throw new HostError('No pudimos conectar con los datos de la sucursal. Revisa el resultado antes de repetir una operación.', 502, method !== 'GET') }
       if (response.ok && response.status === 204) return { body: null as T, status: 204 }
       const result = await response.json().catch(() => null)
-      if (!response.ok) throw new HostError(typeof result?.mensaje === 'string' ? result.mensaje : 'La API de la sucursal rechazó la solicitud.', response.status, response.status >= 500 && method !== 'GET')
+      if (!response.ok) throw new HostError(typeof result?.mensaje === 'string' ? result.mensaje : 'La API de la sucursal rechazó la solicitud.', response.status, response.status >= 500 && method !== 'GET',
+        result && typeof result.campos === 'object' && result.campos !== null ? result.campos : {})
       if (result === null) throw new HostError('La API no devolvió JSON válido.', 502, method !== 'GET')
       return { body: (adapt ? adaptResponse(path, method, result) : result) as T, status: response.status }
   }

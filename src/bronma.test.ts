@@ -33,7 +33,7 @@ describe('Importes y pagos de demostración', () => {
     expect(decimal(cents('0.30') - cents('0.10'))).toBe('0.20')
     expect(() => cents('1e4')).toThrow()
   })
-  it('el mismo UUID reintentado no duplica el abono y un pago excesivo se rechaza', async () => {
+  it('el mismo UUID reintentado no duplica el abono y lo que excede queda a favor', async () => {
     const before = await bronmaApi<ClientDetail>('/clientes/1')
     const body = JSON.stringify({ clienteId: 1, monto: '500.25', metodo: 'EFECTIVO', origen: 'RUTA', uuidDispositivo: 'test-pago-retry' })
     const first = await bronmaApi('/pagos', { method: 'POST', body })
@@ -42,7 +42,11 @@ describe('Importes y pagos de demostración', () => {
     expect(cents(before.saldo) - cents(after.saldo)).toBe(50025n)
     expect(after.notasAbiertas.reduce((sum, note) => sum + cents(note.saldo), 0n)).toBe(cents(after.saldo))
     expect(after.notasAbiertas.filter(n => n.vencida).reduce((sum, note) => sum + cents(note.saldo), 0n)).toBe(cents(after.saldoVencido))
-    await expect(bronmaApi('/pagos', { method: 'POST', body: JSON.stringify({ clienteId: 1, monto: '9999999.00', metodo: 'EFECTIVO', uuidDispositivo: 'test-excess' }) })).rejects.toMatchObject({ status: 422 })
+    // Igual que el backend: un pago mayor a la deuda deja saldo a favor
+    const excess = await bronmaApi<{ saldoAFavor: string; saldoCliente: string }>('/pagos', { method: 'POST', body: JSON.stringify({ clienteId: 1, monto: decimal(cents(after.saldo) + 1000n), metodo: 'EFECTIVO', uuidDispositivo: 'test-excess' }) })
+    expect(excess).toMatchObject({ saldoAFavor: '10.00', saldoCliente: '0.00' })
+    expect((await bronmaApi<ClientDetail>('/clientes/1')).saldoAFavor).toBe('10.00')
+    await expect(bronmaApi('/pagos', { method: 'POST', body: JSON.stringify({ clienteId: 1, monto: '0.00', metodo: 'EFECTIVO', uuidDispositivo: 'test-cero' }) })).rejects.toMatchObject({ status: 422 })
   })
   it('no guarda GPS con precisión insuficiente', async () => {
     const before = await bronmaApi<ClientDetail>('/clientes/6')

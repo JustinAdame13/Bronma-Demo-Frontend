@@ -64,6 +64,28 @@ Cada apertura del formulario genera un `uuidDispositivo`, conservado al reintent
 
 La oficina fija una ubicación con un clic y puede arrastrarla antes de guardar. GPS muestra la precisión y rechaza más de 100 metros, como el contrato. La ubicación siempre requiere confirmación; no se geocodifican direcciones. GPS requiere HTTPS o localhost.
 
+## Desplegar en Vercel con el backend real
+
+Variables del proyecto en Vercel (se leen al construir):
+
+```dotenv
+VITE_USE_MOCKS=false
+VITE_API_URL=/api/v1
+BRONMA_API_URL=https://<tu-servicio>.onrender.com/api/v1
+```
+
+Con `VITE_API_URL=/api/v1` el navegador habla solo con Vercel y la función `api/bromia.ts` reenvía `/api/v1/*` a Spring Boot (`BRONMA_API_URL`). Así no hace falta CORS. Si prefieres que el navegador llame directo a Render, usa `VITE_API_URL=https://<tu-servicio>.onrender.com/api/v1` y agrega el dominio de Vercel a `CORS_ORIGINS` en el backend.
+
+Las funciones de Vercel aceptan peticiones de hasta 4.5 MB; por eso la importación limita los archivos a 4 MB.
+
+Contrato con el backend (Spring Boot):
+
+- `GET /dashboard` devuelve `cartera`, `antiguedad` (`AL_CORRIENTE`, `VENCIDO_1_30`, `VENCIDO_31_60`, `VENCIDO_MAS_60`), `topDeudores`, `cobranza`, `porRuta` y `clientesPorRiesgo`. La gráfica de antigüedad muestra solo los rangos vencidos.
+- `GET /mapa/clientes` incluye `proximoVencimiento` (para el estado "Por vencer") y `montoACobrar`.
+- Los recordatorios traen el folio en `folio`.
+- Pagos: un pago mayor al saldo es válido; lo que excede queda como **saldo a favor** del cliente y el backend lo aplica solo en su siguiente nota. El formulario lo avisa antes de confirmar y el expediente muestra el saldo a favor.
+- Los errores conservan `campos` también a través del proxy, para marcar el campo exacto del formulario.
+
 ## Comprobar y desplegar
 
 ```sh

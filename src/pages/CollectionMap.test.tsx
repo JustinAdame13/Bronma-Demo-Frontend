@@ -15,13 +15,18 @@ beforeEach(() => {
 afterEach(() => { cleanup(); vi.restoreAllMocks() })
 function mount(children: ReactNode) { return render(<QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}>{children}</QueryClientProvider>) }
 const client = { id: 1, nombreNegocio: 'Cliente prueba', saldo: '100.00' } as ClientDetail
-it('rechaza un pago superior al saldo sin llamar al backend', async () => {
+it('rechaza un pago en cero sin llamar al backend', async () => {
   const api = vi.spyOn(backend, 'bronmaApi')
   mount(<PaymentForm client={client} origin="OFICINA" onClose={() => {}} onSaved={() => {}} />)
-  await userEvent.type(screen.getByLabelText('Monto en MXN'), '100.01')
+  await userEvent.type(screen.getByLabelText('Monto en MXN'), '0')
   await userEvent.click(screen.getByRole('button', { name: 'Registrar pago de prueba' }))
-  expect(screen.getByRole('alert').textContent).toContain('hasta $100.00')
+  expect(screen.getByRole('alert').textContent).toContain('mayor que cero')
   expect(api).not.toHaveBeenCalled()
+})
+it('avisa que lo que pasa del saldo quedará a favor', async () => {
+  mount(<PaymentForm client={client} origin="OFICINA" onClose={() => {}} onSaved={() => {}} />)
+  await userEvent.type(screen.getByLabelText('Monto en MXN'), '100.01')
+  expect(screen.getByText(/quedará como saldo a favor/).textContent).toContain('$0.01')
 })
 it('reutiliza el UUID y el importe exacto cuando falla la conexión y se reintenta', async () => {
   const api = vi.spyOn(backend, 'bronmaApi').mockRejectedValueOnce(new Error('Se perdió la conexión.')).mockResolvedValueOnce({})

@@ -13,9 +13,9 @@ async function url() {
   return `http://127.0.0.1:${(server.address() as AddressInfo).port}/api/bromia`
 }
 afterAll(async () => { if (server) await new Promise<void>(r => { server.close(() => r()); server.closeAllConnections() }) })
-it('identifica BRONMIA y explica la configuración pendiente', async () => {
+it('identifica Bronma IA y explica la configuración pendiente', async () => {
   const base = await url()
-  expect(await (await fetch(`${base}/health`)).json()).toEqual({ service: 'BRONMIA', providerConfigured: false })
+  expect(await (await fetch(`${base}/health`)).json()).toEqual({ service: 'Bronma IA', providerConfigured: false })
   const res = await fetch(`${base}/chat`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ message: 'Cartera vencida' }) })
   expect(res.status).toBe(503)
   expect(await res.json()).toMatchObject({ error: expect.stringContaining('OLLAMA_API_KEY'), actionMayHaveRun: false })

@@ -86,7 +86,7 @@
 .workspace-shell .modal::backdrop { background: #24272266; backdrop-filter: none; }
 .workspace-shell .modal-heading h2 { font-size: 22px; letter-spacing: -.03em; }
 
-/* BRONMIA is a consultation workspace, with the composer beside the result. */
+/* Bronma IA is a consultation workspace, with the composer beside the result. */
 .workspace-shell .softy-page { max-width: none; margin: 0; padding: 0; min-width: 0; }
 .workspace-shell .softy-page .softy-layout { grid-template-columns: 360px minmax(0,1fr); gap: 0; border: 1px solid #d2d7c9; border-radius: 8px; overflow: clip; background: #fff; min-height: calc(100dvh - 123px); align-items: stretch; }
 .workspace-shell .softy-page .softy-chat { width: auto; position: sticky; top: 96px; align-self: start; border: 0; border-radius: 0; background: #fff; padding: 22px; min-width: 0; }

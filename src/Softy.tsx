@@ -74,7 +74,7 @@ export function SoftyProvider({ children, modelClient = client }: { children: Re
       return true
     } catch (cause) {
       const uncertain = cause instanceof MayaHttpError ? cause.actionMayHaveRun : Boolean(operationId)
-      setError(`${cause instanceof Error ? cause.message : 'No pudimos conectar con BRONMIA.'}${uncertain ? ' La operación pudo haberse guardado. Revisa el resultado en la app antes de repetirla; no la volveremos a enviar automáticamente.' : ''}`)
+      setError(`${cause instanceof Error ? cause.message : 'No pudimos conectar con Bronma IA.'}${uncertain ? ' La operación pudo haberse guardado. Revisa el resultado en la app antes de repetirla; no la volveremos a enviar automáticamente.' : ''}`)
       return false
     } finally {
       if (operationId) await queryClient.invalidateQueries()
@@ -127,12 +127,12 @@ export default function Softy() {
       return
     }
     if (['FILTER_PRODUCTS', 'SELECT_PRODUCT'].includes(action.type)) { await softy.send('Actualiza la consulta con el valor seleccionado.', action); return }
-    setActionError('Esta acción no está disponible. Puedes pedirle a BRONMIA otra opción.')
+    setActionError('Esta acción no está disponible. Puedes pedirle a Bronma IA otra opción.')
   }
   return <div className="softy-page">
-    <h1 className="sr-only">BRONMIA</h1>
+    <h1 className="sr-only">Bronma IA</h1>
     <div className={`softy-layout${softy.screen ? '' : ' softy-layout-start'}`}>
-      <section className="panel softy-chat" aria-label="Conversación con BRONMIA">
+      <section className="panel softy-chat" aria-label="Conversación con Bronma IA">
         <div className="softy-chat-title"><span className="softy-avatar" aria-hidden="true" /><h2>Consulta de cartera</h2><div className="softy-toolbar" role="group" aria-label="Herramientas de conversación"><button className="softy-tool" aria-label="Nueva conversación" title="Nueva conversación" disabled={disabled || voice.listening} onClick={() => { voice.cancel(); softy.reset(); setMessage(''); setActionError('') }}><SquarePen size={21} aria-hidden="true" /></button><button className="softy-tool" aria-label="Historial de interfaces" title="Historial de interfaces" aria-haspopup="dialog" disabled={softy.loading || preparing || voice.listening} onClick={() => setShowHistory(true)}><History size={21} aria-hidden="true" /></button></div></div>
         <form onSubmit={event => { event.preventDefault(); void submit() }} className="stack-form">
           <label htmlFor="softy-message">Tu solicitud</label>
@@ -142,18 +142,18 @@ export default function Softy() {
         {voice.listening && <p className="field-help" role="status">Escuchando… Termina el dictado para enviar tu frase.</p>}
         {!voice.supported && <p className="field-help">El dictado no está disponible en este navegador. Puedes escribir.</p>}
         {voice.error && <Notice error message={voice.error} />}
-        {softy.history.length > 0 && <details className="softy-history"><summary>Conversación ({Math.ceil(softy.history.length / 2)})</summary><div>{softy.history.map((item, i) => <div key={i} data-role={item.role}><strong>{item.role === 'user' ? 'Tú' : 'BRONMIA'}</strong><p>{item.content}</p></div>)}</div></details>}
+        {softy.history.length > 0 && <details className="softy-history"><summary>Conversación ({Math.ceil(softy.history.length / 2)})</summary><div>{softy.history.map((item, i) => <div key={i} data-role={item.role}><strong>{item.role === 'user' ? 'Tú' : 'Bronma IA'}</strong><p>{item.content}</p></div>)}</div></details>}
       </section>
-      <section className="softy-results" aria-label="Interfaz creada por BRONMIA" aria-busy={softy.loading || preparing}>
+      <section className="softy-results" aria-label="Interfaz creada por Bronma IA" aria-busy={softy.loading || preparing}>
         {(softy.error || actionError) && <Notice error message={softy.error || actionError} />}
-        {softy.loading && <p className="softy-working" role="status">BRONMIA está consultando tu cartera…</p>}
+        {softy.loading && <p className="softy-working" role="status">Bronma IA está consultando tu cartera…</p>}
         {preparing && <p className="softy-working" role="status">Preparando los datos para que los revises…</p>}
         {softy.screen && useMocks && <p className="field-help">Datos de demostración de BRONMA.</p>}
         {softy.screen ? <>{softy.savedAt !== undefined && <p className="softy-saved-note">Interfaz guardada · {interfaceDate(softy.savedAt)}</p>}<p className={softy.screen.components.length ? 'sr-only' : 'softy-answer'}>{softy.screen.assistantMessage}</p><A2UIRenderer key={`${softy.screen.screenId}:${softy.savedAt || ''}`} screen={softy.screen} loading={disabled || voice.listening} onAction={action => { void onAction(action) }} components={{ StockForm: BusinessForm, SaleForm: BusinessForm, BarChart: SoftyChart, LineChart: SoftyChart }} />{suggestions}</> : <div className="panel softy-start"><h2>Consultas frecuentes</h2>{suggestions}</div>}
       </section>
     </div>
     {showHistory && <Modal title="Últimas interfaces" onClose={() => setShowHistory(false)}>
-      {softy.savedInterfaces?.length ? <ol className="softy-saved-list">{softy.savedInterfaces.map(saved => <li key={saved.id}><button className="softy-saved-item" onClick={() => { softy.restore(saved); setMessage(''); setActionError(''); setShowHistory(false) }}><span className="softy-saved-icon"><PanelsTopLeft size={21} aria-hidden="true" /></span><span className="softy-saved-copy"><strong>{saved.title}</strong><time dateTime={new Date(saved.createdAt).toISOString()}>{interfaceDate(saved.createdAt)}</time></span><ArrowUpRight size={19} aria-hidden="true" /></button></li>)}</ol> : <p className="softy-history-empty">Las interfaces que genere BRONMIA aparecerán aquí.</p>}
+      {softy.savedInterfaces?.length ? <ol className="softy-saved-list">{softy.savedInterfaces.map(saved => <li key={saved.id}><button className="softy-saved-item" onClick={() => { softy.restore(saved); setMessage(''); setActionError(''); setShowHistory(false) }}><span className="softy-saved-icon"><PanelsTopLeft size={21} aria-hidden="true" /></span><span className="softy-saved-copy"><strong>{saved.title}</strong><time dateTime={new Date(saved.createdAt).toISOString()}>{interfaceDate(saved.createdAt)}</time></span><ArrowUpRight size={19} aria-hidden="true" /></button></li>)}</ol> : <p className="softy-history-empty">Las interfaces que genere Bronma IA aparecerán aquí.</p>}
     </Modal>}
     {review && <Modal title={review.title} description={review.description} onClose={() => setReview(null)} busy={softy.loading}>
       <div className="modal-actions"><button className="button outlined" disabled={softy.loading} onClick={() => setReview(null)}>Cancelar</button><button className="button primary" disabled={disabled} onClick={() => { const pending = review; setReview(null); void softy.send('Guarda la operación que acabo de revisar y muestra el resultado de la API.', pending.action, pending.operationId) }}>Confirmar y guardar</button></div>
